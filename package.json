@@ -1,5 +1,5 @@
 {
-  "name": "browser-pack",
+  "name": "browser-pack-register",
   "version": "6.1.0",
   "description": "pack node-style source files from a json stream into a browser bundle",
   "main": "index.js",
@@ -42,9 +42,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/browserify/browser-pack.git"
+    "url": "git://github.com/jahbini/browser-pack-register.git"
   },
-  "homepage": "https://github.com/browserify/browser-pack",
+  "homepage": "https://github.com/jahbini/browser-pack-register",
   "keywords": [
     "browser",
     "bundle",
