@@ -32,6 +32,7 @@ module.exports = function (opts) {
     
     var first = true;
     var entries = [];
+    var aliases = {}
     var basedir = defined(opts.basedir, process.cwd());
     var prelude = opts.prelude || defaultPrelude;
     var preludePath = opts.preludePath ||
@@ -51,7 +52,7 @@ module.exports = function (opts) {
             var pre = opts.externalRequireName || 'require';
             stream.push(Buffer.from(pre + '=', 'utf8'));
         }
-        if (first) stream.push(Buffer.from(prelude + '({', 'utf8'));
+        if (first) stream.push(Buffer.from(prelude + ';', 'utf8'));
         
         if (row.sourceFile && !row.nomap) {
             if (!sourcemap) {
@@ -66,20 +67,27 @@ module.exports = function (opts) {
                 { line: lineno }
             );
         }
-        
+        Object.keys(row.deps || {}).sort().map(function (key) { aliases[JSON.stringify(key)]= JSON.stringify(path.relative(basedir,row.deps[key])) ; return; } );
+        debugger;
         var wrappedSource = [
-            (first ? '' : ','),
+            "\nrequire.register(",
+            '"',
+            row.name || path.relative(basedir,row.id),
+            '",',
+/*
             JSON.stringify(row.id),
             ':[',
-            'function(require,module,exports){\n',
+*/
+            'function(exports,require,module){\n',
             combineSourceMap.removeComments(row.source),
             '\n},',
             '{' + Object.keys(row.deps || {}).sort().map(function (key) {
                 return JSON.stringify(key) + ':'
-                    + JSON.stringify(row.deps[key])
+                    + JSON.stringify(path.relative(basedir,row.deps[key]))
                 ;
             }).join(',') + '}',
-            ']'
+            /* ']' */
+            ")"
         ].join('');
 
         stream.push(Buffer.from(wrappedSource, 'utf8'));
@@ -96,10 +104,16 @@ module.exports = function (opts) {
     function end () {
         if (first) stream.push(Buffer.from(prelude + '({', 'utf8'));
         entries = entries.filter(function (x) { return x !== undefined });
-        
+
         stream.push(
-            Buffer.from('},{},' + JSON.stringify(entries) + ')', 'utf8')
+            Buffer.from(';/*end pack */\n', 'utf8')
         );
+        
+        stream.push( 'require.alias("site-loader/app/initialize.coffee","initialize");\nwindow.jQuery=require("jquery");') ;
+        Object.keys(aliases).sort().map(function (key) {
+          stream.push ( "require.alias(" + aliases[key] + "," + key + ");\n");
+          return;
+          });
 
         if (opts.standalone && !first) {
             stream.push(Buffer.from(
