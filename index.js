@@ -109,7 +109,7 @@ module.exports = function (opts) {
             Buffer.from(';/*end pack */\n', 'utf8')
         );
         
-        stream.push( 'require.alias("site-loader/app/initialize.coffee","initialize");\nwindow.jQuery=require("jquery");') ;
+        stream.push( 'require.alias("app/initialize.coffee","initialize");\nwindow.jQuery=require("jquery");') ;
         Object.keys(aliases).sort().map(function (key) {
           stream.push ( "require.alias(" + aliases[key] + "," + key + ");\n");
           return;
